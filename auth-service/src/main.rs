@@ -1,4 +1,4 @@
-use axum::{response::Html, routing::get, serve, Router};
+use axum::{response::Html, routing::get, Router};
 use tower_http::services::ServeDir;
 
 #[tokio::main]
@@ -18,6 +18,5 @@ async fn main() {
 }
 
 async fn hello_handler() -> Html<&'static str> {
-    // TODO: Update this to a custom message!
-    Html("<h1>Hello, World!</h1>")
+    Html("<h1>Baby steps!!</h1>")
 }
