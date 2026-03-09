@@ -1,6 +1,7 @@
 use auth_service::Application;
 use reqwest::Client;
 use serde::Serialize;
+use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
@@ -79,4 +80,8 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
+}
+
+pub fn get_random_email() -> String {
+    format!("{}@example.com", Uuid::new_v4())
 }
