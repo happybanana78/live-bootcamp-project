@@ -1,6 +1,6 @@
-use axum::http::StatusCode;
+pub mod routes;
+
 use axum::response::IntoResponse;
-use axum::routing::post;
 use axum::serve::Serve;
 use axum::Router;
 use std::error::Error;
@@ -22,11 +22,7 @@ impl Application {
 
         let router = Router::new()
             .fallback_service(assets_dir)
-            .route("/signup", post(signup))
-            .route("/login", post(login))
-            .route("/logout", post(logout))
-            .route("/verify-2fa", post(verify_2fa))
-            .route("/verify-token", post(verify_token));
+            .merge(routes::build_routes());
 
         let listener = TcpListener::bind(address).await?;
 
@@ -41,24 +37,4 @@ impl Application {
         println!("listening on {}", &self.address);
         self.server.await
     }
-}
-
-async fn signup() -> impl IntoResponse {
-    StatusCode::CREATED
-}
-
-async fn login() -> impl IntoResponse {
-    StatusCode::OK
-}
-
-async fn logout() -> impl IntoResponse {
-    StatusCode::NO_CONTENT
-}
-
-async fn verify_2fa() -> impl IntoResponse {
-    StatusCode::OK
-}
-
-async fn verify_token() -> impl IntoResponse {
-    StatusCode::OK
 }
