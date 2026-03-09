@@ -1,8 +1,11 @@
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+use axum::routing::post;
 use axum::serve::Serve;
 use axum::Router;
 use std::error::Error;
 use tokio::net::TcpListener;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 
 // This struct encapsulates our application-related logic.
 pub struct Application {
@@ -14,21 +17,48 @@ pub struct Application {
 
 impl Application {
     pub async fn build(address: &str) -> Result<Self, Box<dyn Error>> {
-        let assets_dir = ServeDir::new("assets");
-        let router = Router::new().fallback_service(assets_dir);
+        let assets_dir =
+            ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
+
+        let router = Router::new()
+            .fallback_service(assets_dir)
+            .route("/signup", post(signup))
+            .route("/login", post(login))
+            .route("/logout", post(logout))
+            .route("/verify-2fa", post(verify_2fa))
+            .route("/verify-token", post(verify_token));
 
         let listener = TcpListener::bind(address).await?;
 
+        let address = listener.local_addr()?.to_string();
+
         let server = axum::serve(listener, router);
 
-        Ok(Self {
-            server,
-            address: address.to_string(),
-        })
+        Ok(Self { server, address })
     }
 
     pub async fn run(self) -> Result<(), std::io::Error> {
         println!("listening on {}", &self.address);
         self.server.await
     }
+}
+
+async fn signup() -> impl IntoResponse {
+    StatusCode::CREATED
+}
+
+async fn login() -> impl IntoResponse {
+    StatusCode::OK
+}
+
+async fn logout() -> impl IntoResponse {
+    StatusCode::NO_CONTENT
+}
+
+async fn verify_2fa() -> impl IntoResponse {
+    StatusCode::OK
+}
+
+async fn verify_token() -> impl IntoResponse {
+    StatusCode::OK
 }
