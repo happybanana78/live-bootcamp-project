@@ -1,3 +1,4 @@
+use auth_service::state::{AppState, UserStoreType};
 use auth_service::Application;
 use reqwest::Client;
 use serde::Serialize;
@@ -10,7 +11,10 @@ pub struct TestApp {
 
 impl TestApp {
     pub async fn new() -> Self {
-        let app = Application::build("127.0.0.1:0")
+        let user_store = UserStoreType::default();
+        let app_state = AppState::new(user_store);
+
+        let app = Application::build(app_state, "127.0.0.1:0")
             .await
             .expect("Failed to build app");
 

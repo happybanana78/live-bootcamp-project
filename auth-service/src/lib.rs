@@ -1,6 +1,9 @@
+pub mod models;
 pub mod routes;
+pub mod services;
+pub mod state;
 
-use axum::response::IntoResponse;
+use crate::state::AppState;
 use axum::serve::Serve;
 use axum::Router;
 use std::error::Error;
@@ -16,13 +19,14 @@ pub struct Application {
 }
 
 impl Application {
-    pub async fn build(address: &str) -> Result<Self, Box<dyn Error>> {
+    pub async fn build(app_state: AppState, address: &str) -> Result<Self, Box<dyn Error>> {
         let assets_dir =
             ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
 
         let router = Router::new()
             .fallback_service(assets_dir)
-            .merge(routes::build_routes());
+            .merge(routes::build_routes())
+            .with_state(app_state);
 
         let listener = TcpListener::bind(address).await?;
 

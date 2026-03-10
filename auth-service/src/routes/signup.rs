@@ -1,15 +1,31 @@
+use crate::models::User;
+use crate::state::AppState;
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-pub fn routes() -> Router {
+pub fn routes() -> Router<AppState> {
     Router::new().route("/signup", post(signup))
 }
 
-async fn signup(Json(request): Json<SignupRequest>) -> impl IntoResponse {
-    StatusCode::CREATED
+async fn signup(
+    State(state): State<AppState>,
+    Json(request): Json<SignupRequest>,
+) -> impl IntoResponse {
+    let user = User::from(request);
+
+    let mut user_store = state.user_store.write().await;
+
+    user_store.add_user(user).unwrap();
+
+    let response = Json(SignupResponse {
+        message: "User created successfully!".to_string(),
+    });
+
+    (StatusCode::CREATED, response)
 }
 
 #[derive(Deserialize)]
@@ -18,4 +34,9 @@ pub struct SignupRequest {
     pub password: String,
     #[serde(rename = "requires2FA")]
     pub requires_2fa: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+pub struct SignupResponse {
+    pub message: String,
 }

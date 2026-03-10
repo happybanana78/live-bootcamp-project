@@ -1,8 +1,9 @@
 use crate::helpers::{get_random_email, TestApp};
+use auth_service::routes::signup::SignupResponse;
 use axum::http::StatusCode;
 
 #[tokio::test]
-async fn signup() {
+async fn should_return_201_if_valid_input() {
     let app = TestApp::new().await;
 
     let payload = serde_json::json!({
@@ -14,6 +15,18 @@ async fn signup() {
     let response = app.signup(payload).await;
 
     assert_eq!(response.status(), StatusCode::CREATED);
+
+    let expected_response = SignupResponse {
+        message: "User created successfully!".to_owned(),
+    };
+
+    assert_eq!(
+        response
+            .json::<SignupResponse>()
+            .await
+            .expect("Could not deserialize response body to UserBody"),
+        expected_response
+    );
 }
 
 #[tokio::test]
