@@ -6,7 +6,7 @@ async fn signup() {
     let app = TestApp::new().await;
 
     let payload = serde_json::json!({
-        "password": "testpassword1",
+        "password": "testpassword",
         "email": get_random_email(),
         "requires2FA": true,
     });
