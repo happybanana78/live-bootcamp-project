@@ -1,4 +1,5 @@
-use crate::models::User;
+use crate::models::error::AuthAPIError;
+use crate::models::user::User;
 use crate::state::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -14,18 +15,24 @@ pub fn routes() -> Router<AppState> {
 async fn signup(
     State(state): State<AppState>,
     Json(request): Json<SignupRequest>,
-) -> impl IntoResponse {
-    let user = User::from(request);
+) -> Result<impl IntoResponse, AuthAPIError> {
+    let user = User::try_from(request)?;
 
     let mut user_store = state.user_store.write().await;
 
-    user_store.add_user(user).unwrap();
+    if user_store.get_user(&user.email).is_err() {
+        return Err(AuthAPIError::UserAlreadyExists);
+    }
+
+    user_store
+        .add_user(user)
+        .map_err(|_| AuthAPIError::UnexpectedError)?;
 
     let response = Json(SignupResponse {
         message: "User created successfully!".to_string(),
     });
 
-    (StatusCode::CREATED, response)
+    Ok((StatusCode::CREATED, response))
 }
 
 #[derive(Deserialize)]

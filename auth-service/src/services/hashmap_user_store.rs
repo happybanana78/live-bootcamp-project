@@ -1,4 +1,4 @@
-use crate::models::User;
+use crate::models::user::User;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
@@ -46,7 +46,7 @@ impl HashmapUserStore {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::User;
+    use crate::models::user::User;
     use crate::services::hashmap_user_store::HashmapUserStore;
 
     #[tokio::test]
