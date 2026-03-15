@@ -1,4 +1,3 @@
-use crate::models::data_store::UserStore;
 use crate::models::error::AuthAPIError;
 use crate::models::user::User;
 use crate::state::AppState;
@@ -21,7 +20,7 @@ async fn signup(
 
     let mut user_store = state.user_store.write().await;
 
-    if user_store.get_user(&user.email).is_err() {
+    if user_store.get_user(user.email.clone()).is_err() {
         return Err(AuthAPIError::UserAlreadyExists);
     }
 
