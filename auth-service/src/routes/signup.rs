@@ -20,7 +20,7 @@ async fn signup(
 
     let mut user_store = state.user_store.write().await;
 
-    if user_store.get_user(user.email.clone()).is_err() {
+    if user_store.get_user(user.email.clone()).is_ok() {
         return Err(AuthAPIError::UserAlreadyExists);
     }
 
