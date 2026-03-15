@@ -1,3 +1,4 @@
+use crate::models::data_store::UserStore;
 use crate::models::error::AuthAPIError;
 use crate::models::user::User;
 use crate::state::AppState;

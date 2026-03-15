@@ -1,22 +1,15 @@
+use crate::models::data_store::{UserStore, UserStoreError};
 use crate::models::user::User;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-
-#[derive(Debug, PartialEq)]
-pub enum UserStoreError {
-    UserAlreadyExists,
-    UserNotFound,
-    InvalidCredentials,
-    UnexpectedError,
-}
 
 #[derive(Default)]
 pub struct HashmapUserStore {
     users: HashMap<String, User>,
 }
 
-impl HashmapUserStore {
-    pub fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
+impl UserStore for HashmapUserStore {
+    fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         match self.users.entry(user.email.clone()) {
             Entry::Occupied(_) => Err(UserStoreError::UserAlreadyExists),
             Entry::Vacant(v) => {
@@ -26,14 +19,14 @@ impl HashmapUserStore {
         }
     }
 
-    pub fn get_user(&self, email: &str) -> Result<User, UserStoreError> {
+    fn get_user(&self, email: &str) -> Result<User, UserStoreError> {
         match self.users.get(email) {
             Some(user) => Ok(user.clone()),
             None => Err(UserStoreError::UserNotFound),
         }
     }
 
-    pub fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
+    fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
         let user = self.get_user(email)?;
 
         if user.password == password {
@@ -46,8 +39,7 @@ impl HashmapUserStore {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::user::User;
-    use crate::services::hashmap_user_store::HashmapUserStore;
+    use super::*;
 
     #[tokio::test]
     async fn test_add_user() {
