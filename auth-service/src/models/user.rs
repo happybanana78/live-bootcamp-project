@@ -1,6 +1,7 @@
 use crate::models::email::Email;
 use crate::models::error::AuthAPIError;
 use crate::models::password::Password;
+use crate::requests::login_request::LoginRequest;
 use crate::routes::signup::SignupRequest;
 
 #[derive(Debug, Clone)]
@@ -24,6 +25,23 @@ impl TryFrom<SignupRequest> for User {
     type Error = AuthAPIError;
 
     fn try_from(value: SignupRequest) -> Result<Self, Self::Error> {
+        let email = Email::parse(&value.email).map_err(|_| AuthAPIError::InvalidCredentials)?;
+
+        let password =
+            Password::parse(&value.password).map_err(|_| AuthAPIError::InvalidCredentials)?;
+
+        Ok(Self {
+            email,
+            password,
+            requires_2fa: false,
+        })
+    }
+}
+
+impl TryFrom<LoginRequest> for User {
+    type Error = AuthAPIError;
+
+    fn try_from(value: LoginRequest) -> Result<Self, Self::Error> {
         let email = Email::parse(&value.email).map_err(|_| AuthAPIError::InvalidCredentials)?;
 
         let password =

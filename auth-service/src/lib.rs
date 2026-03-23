@@ -1,4 +1,5 @@
 pub mod models;
+pub mod requests;
 pub mod routes;
 pub mod services;
 pub mod state;
@@ -47,7 +48,7 @@ impl Application {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ErrorResponse {
     pub error: String,
 }
@@ -60,6 +61,7 @@ impl IntoResponse for AuthAPIError {
             AuthAPIError::UnexpectedError => {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
             }
+            AuthAPIError::IncorrectCredentials => (StatusCode::UNAUTHORIZED, "Unauthorized"),
         };
 
         let body = Json(ErrorResponse {
