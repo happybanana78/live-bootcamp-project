@@ -1,4 +1,4 @@
-use crate::helpers::TestApp;
+use crate::helpers::{get_random_email, TestApp};
 use axum::http::StatusCode;
 
 #[tokio::test]
@@ -59,7 +59,26 @@ async fn should_return_400_if_invalid_input() {
 
 #[tokio::test]
 async fn should_return_401_if_incorrect_credentials() {
-    // Call the log-in route with incorrect credentials and assert
-    // that a 401 HTTP status code is returned along with the appropriate error message.
-    todo!()
+    let app = TestApp::new().await;
+
+    let email = get_random_email();
+
+    let signup_payload = serde_json::json!({
+        "password": "test_password",
+        "email": email,
+        "requires2FA": false,
+    });
+
+    let signup_response = app.signup(signup_payload).await;
+
+    assert_eq!(signup_response.status(), StatusCode::CREATED);
+
+    let login_payload = serde_json::json!({
+        "password": "wrong_password",
+        "email": email,
+    });
+
+    let login_response = app.login(login_payload).await;
+
+    assert_eq!(login_response.status(), StatusCode::UNAUTHORIZED);
 }
