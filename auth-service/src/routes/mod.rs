@@ -10,7 +10,7 @@ pub mod verify_token;
 pub fn build_routes() -> Router<AppState> {
     Router::new()
         .merge(login::routes())
-        // .merge(logout::routes())
+        .merge(logout::routes())
         .merge(signup::routes())
     // .merge(verify_2fa::routes())
     // .merge(verify_token::routes())

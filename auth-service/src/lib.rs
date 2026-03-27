@@ -9,13 +9,14 @@ pub mod utils;
 
 use crate::models::error::AuthAPIError;
 use crate::state::AppState;
-use axum::http::StatusCode;
+use axum::http::{Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::serve::Serve;
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 use tower_http::services::{ServeDir, ServeFile};
 
 // This struct encapsulates our application-related logic.
@@ -28,13 +29,26 @@ pub struct Application {
 
 impl Application {
     pub async fn build(app_state: AppState, address: &str) -> Result<Self, Box<dyn Error>> {
+        let allowed_origins = [
+            "http://localhost:8000".parse()?,
+            format!("http://{}:8000", app_state.config.prod_ip).parse()?,
+        ];
+
+        let cors = CorsLayer::new()
+            // Allow GET and POST requests
+            .allow_methods([Method::GET, Method::POST])
+            // Allow cookies to be included in requests
+            .allow_credentials(true)
+            .allow_origin(allowed_origins);
+
         let assets_dir =
             ServeDir::new("assets").not_found_service(ServeFile::new("assets/index.html"));
 
         let router = Router::new()
             .fallback_service(assets_dir)
             .merge(routes::build_routes())
-            .with_state(app_state);
+            .with_state(app_state)
+            .layer(cors);
 
         let listener = TcpListener::bind(address).await?;
 
@@ -65,6 +79,8 @@ impl IntoResponse for AuthAPIError {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Unexpected error")
             }
             AuthAPIError::IncorrectCredentials => (StatusCode::UNAUTHORIZED, "Unauthorized"),
+            AuthAPIError::MissingToken => (StatusCode::BAD_REQUEST, "Missing token"),
+            AuthAPIError::InvalidToken => (StatusCode::UNAUTHORIZED, "Unauthorized"),
         };
 
         let body = Json(ErrorResponse {

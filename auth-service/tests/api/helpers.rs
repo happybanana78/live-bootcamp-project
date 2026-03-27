@@ -2,6 +2,7 @@ use auth_service::config::Config;
 use auth_service::services::hashmap_user_store::HashmapUserStore;
 use auth_service::state::AppState;
 use auth_service::Application;
+use reqwest::cookie::Jar;
 use reqwest::Client;
 use serde::Serialize;
 use std::sync::Arc;
@@ -10,6 +11,7 @@ use uuid::Uuid;
 
 pub struct TestApp {
     pub address: String,
+    pub cookie_jar: Arc<Jar>,
     pub http_client: Client,
 }
 
@@ -19,6 +21,7 @@ impl TestApp {
 
         let config = Config {
             jwt_secret: "test_secret".to_string(),
+            prod_ip: "1.2.3.4".to_string(),
         };
 
         let app_state = AppState::new(user_store, config);
@@ -34,10 +37,16 @@ impl TestApp {
         #[allow(clippy::let_underscore_future)]
         let _ = tokio::spawn(app.run());
 
-        let http_client = Client::new();
+        let cookie_jar = Arc::new(Jar::default());
+
+        let http_client = Client::builder()
+            .cookie_provider(cookie_jar.clone())
+            .build()
+            .unwrap();
 
         Self {
             address,
+            cookie_jar,
             http_client,
         }
     }
