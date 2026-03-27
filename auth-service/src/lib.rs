@@ -1,8 +1,11 @@
+pub mod auth;
+pub mod config;
 pub mod models;
 pub mod requests;
 pub mod routes;
 pub mod services;
 pub mod state;
+pub mod utils;
 
 use crate::models::error::AuthAPIError;
 use crate::state::AppState;

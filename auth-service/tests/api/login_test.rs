@@ -1,18 +1,36 @@
 use crate::helpers::{get_random_email, TestApp};
+use auth_service::utils::constants::JWT_COOKIE_NAME;
 use axum::http::StatusCode;
 
 #[tokio::test]
 async fn login() {
     let app = TestApp::new().await;
 
-    let payload = serde_json::json!({
-        "password": "testpassword",
-        "email": "test@example.com",
+    let email = get_random_email();
+
+    let signup_payload = serde_json::json!({
+        "password": "test_password",
+        "email": email,
+        "requires2FA": false,
     });
 
-    let response = app.login(payload).await;
+    let signup_response = app.signup(signup_payload).await;
 
-    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(signup_response.status(), StatusCode::CREATED);
+
+    let login_payload = serde_json::json!({
+        "password": "test_password",
+        "email": email,
+    });
+
+    let login_response = app.login(login_payload).await;
+
+    let auth_cookie = login_response
+        .cookies()
+        .find(|cookie| cookie.name() == JWT_COOKIE_NAME)
+        .expect("No auth cookie found");
+
+    assert!(!auth_cookie.value().is_empty());
 }
 
 #[tokio::test]

@@ -1,3 +1,4 @@
+use auth_service::config::Config;
 use auth_service::services::hashmap_user_store::HashmapUserStore;
 use auth_service::state::AppState;
 use auth_service::Application;
@@ -15,7 +16,12 @@ pub struct TestApp {
 impl TestApp {
     pub async fn new() -> Self {
         let user_store = Arc::new(RwLock::new(HashmapUserStore::default()));
-        let app_state = AppState::new(user_store);
+
+        let config = Config {
+            jwt_secret: "test_secret".to_string(),
+        };
+
+        let app_state = AppState::new(user_store, config);
 
         let app = Application::build(app_state, "127.0.0.1:0")
             .await
